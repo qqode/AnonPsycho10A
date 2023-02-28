@@ -34,11 +34,15 @@ def text_message_handler(message):
                 cur.execute("UPDATE queue SET num = num - 1 WHERE num != 0")
                 con.commit()
 
-                cur.execute("SELECT user_id FROM queue WHERE num")
-                res = dict(cur.fetchall()[0])
+                cur.execute("SELECT user_id FROM queue WHERE num = 1")
+                bot.send_message(message.from_user.id, "<b>Диалог окончен!</b>")
 
-                bot.send_message(res['user_id'], "<b>Диалог начат!</b>")
-
+                try:
+                    res = dict(cur.fetchall()[0])
+                    bot.send_message(res['user_id'], "<b>Диалог начат!</b>")
+                    bot.send_message(psycholog, f"<b>Диалог с #id{int(res['user_id'])*2} начат!</b>")
+                except:
+                    return
                 return
             markup = InlineKeyboardMarkup()
             markup.row_width = 2
@@ -52,7 +56,7 @@ def text_message_handler(message):
         markup.row_width = 2
         markup.add(InlineKeyboardButton(
             "Начать диалог", callback_data=f"addToQueue"))
-        bot.send_message(message.from_user.id, "Первое сообщение", reply_markup=markup)
+        bot.send_message(message.from_user.id, "Нажимая 'Начать диалог' вы соглашаетесь с <a href='t.me'><b>правилами</b></a> и <a href='t.me'><b>политикой конфиденциальности бота</b></a>", reply_markup=markup, disable_web_page_preview=True)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
@@ -70,4 +74,5 @@ def callback_query(call):
             markup = ReplyKeyboardMarkup(resize_keyboard=True)
             markup.add(KeyboardButton("Закончить диалог"))
             bot.send_message(call.from_user.id, "<b>Диалог начат!</b>", reply_markup=markup)
+            bot.send_message(psycholog, f"<b>Диалог с #id{int(call.from_user.id)*2} начат!</b>")
 bot.polling(non_stop=True)
